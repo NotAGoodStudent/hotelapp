@@ -2,9 +2,7 @@ package layout;
 import com.toedter.calendar.JCalendar;
 import com.toedter.calendar.JDateChooser;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -12,12 +10,12 @@ public class Layout extends JFrame
 {
     private static final long serialVersionUID = 1L;
     public JPanel panel;
-    public JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname;
+    public JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname, dniic, nameic, surnameic, personic, nightnumbic, hotelic, roomnumbic, personnumbbackic;
     public JTable management2, management1;
     public JButton booking, save, save1, delete;
     public JDateChooser choosedate;
     public JCalendar bookdate;
-    public JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking;
+    public JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking, area1, area2;
 
 
     public Layout()
@@ -142,6 +140,13 @@ public class Layout extends JFrame
         jdni.setBounds(160, 95, 150, 23);
         jp.add(jdni);
 
+        dniic = new JLabel();
+        dniic.setIcon(new ImageIcon("src/icons/check.png"));
+        dniic.setVisible(true);
+        dniic.setBounds(320, 97, 20, 20);
+        jp.add(dniic);
+
+
         name = defineFontNonTitle();
         name.setText("Name:");
         name.setBounds(8, 135, jp.getWidth(), 17);
@@ -234,7 +239,50 @@ public class Layout extends JFrame
 
         personnumb = defineFontNonTitle();
         personnumb.setText("# Pers: ");
-        personnumb.setBounds(140, 215, jp.getWidth(),17);
+        personnumb.setBounds(250, 215, jp.getWidth(),17);
+        jp.add(personnumb);
+
+        jpersonnumbback = new JTextField();
+        jpersonnumbback.setBounds(312, 210, 50, 23);
+        jp.add(jpersonnumbback);
+
+        save1 = new JButton("Save!");
+        save1.setBounds(160,265,90,30);
+        save1.setEnabled(false);
+        jp.add(save1);
+
+
+        checkbooking = defineFontNonTitle();
+        checkbooking.setText("Check booking: ");
+        checkbooking.setBounds(8, 320, jp.getWidth(), 17);
+        jp.add(checkbooking);
+
+        jcheckbooking = new JTextField();
+        jcheckbooking.setBounds(145, 340, 150, 23);
+        jp.add(jcheckbooking);
+
+        intrname = defineFontNonTitle();
+        intrname.setText("Client name: ");
+        intrname.setBounds(8,360, jp.getWidth(), 17);
+        jp.add(intrname);
+
+        area1 = new JTextField();
+        area1.setBounds(8, 400, 150, 150);
+        jp.add(area1);
+
+        area2 = new JTextField();
+        area2.setBounds(230, 400, 150, 150);
+        jp.add(area2);
+
+        delete = new JButton("Delete!");
+        delete.setEnabled(false);
+        delete.setBounds(160, 600, 90, 30);
+        jp.add(delete);
+
+
+
+
+
 
 
 
