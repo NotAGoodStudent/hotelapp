@@ -3,6 +3,10 @@ import com.toedter.calendar.JCalendar;
 import com.toedter.calendar.JDateChooser;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -10,13 +14,13 @@ public class Layout extends JFrame
 {
     private static final long serialVersionUID = 1L;
     public JPanel panel;
-    public JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname, dniic, nameic, surnameic, personic, nightnumbic, hotelic, roomnumbic, personnumbbackic;
+    public JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname, dniIC, nameIC, surnameIC, guestsIC, nightsIC, hotelIC, roomnumbIC, getPersonnumbbackIC;
     public JTable management2, management1;
     public JButton booking, save, save1, delete;
     public JDateChooser choosedate;
     public JCalendar bookdate;
     public JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking, area1, area2;
-
+    public ImageIcon trueic, falseic, falseredic, trueredic;
 
     public Layout()
     {
@@ -35,6 +39,8 @@ public class Layout extends JFrame
         addTextManagement();
         addTextClient();
         addTextBack();
+        createIcons();
+        addKeyListenerToTextField();
     }
 
     public void addPanels()
@@ -140,12 +146,9 @@ public class Layout extends JFrame
         jdni.setBounds(160, 95, 150, 23);
         jp.add(jdni);
 
-        dniic = new JLabel();
-        dniic.setIcon(new ImageIcon("src/icons/check.png"));
-        dniic.setVisible(true);
-        dniic.setBounds(320, 97, 20, 20);
-        jp.add(dniic);
-
+        dniIC = new JLabel();
+        dniIC.setBounds(320, 97, 20, 20);
+        jp.add(dniIC);
 
         name = defineFontNonTitle();
         name.setText("Name:");
@@ -156,6 +159,10 @@ public class Layout extends JFrame
         jname.setBounds(160, 130, 150, 23);
         jp.add(jname);
 
+        nameIC = new JLabel();
+        nameIC.setBounds(320, 132, 20, 20);
+        jp.add(nameIC);
+
         surname = defineFontNonTitle();
         surname.setText("Surname: ");
         surname.setBounds(8, 170, jp.getWidth(), 17);
@@ -164,6 +171,10 @@ public class Layout extends JFrame
         jsurname = new JTextField();
         jsurname.setBounds(160, 165, 150, 23);
         jp.add(jsurname);
+
+        surnameIC = new JLabel();
+        surnameIC.setBounds(320, 167, 20, 20);
+        jp.add(surnameIC);
 
         guests = defineFontNonTitle();
         guests.setText("Guests: ");
@@ -174,6 +185,10 @@ public class Layout extends JFrame
         jpersonnumb.setBounds(160, 200, 50, 23);
         jp.add(jpersonnumb);
 
+        guestsIC = new JLabel();
+        guestsIC.setBounds(320, 202, 20, 20);
+        jp.add(guestsIC);
+
         nights = defineFontNonTitle();
         nights.setText("Nights: ");
         nights.setBounds(8, 240, jp.getWidth(), 17);
@@ -182,6 +197,10 @@ public class Layout extends JFrame
         jnightnumb = new JTextField();
         jnightnumb.setBounds(160, 235, 50, 23);
         jp.add(jnightnumb);
+
+        nightsIC = new JLabel();
+        nightsIC.setBounds(320, 237, 20, 20);
+        jp.add(nightsIC);
 
         caltext = defineFontNonTitle();
         caltext.setText("Choose a date: ");
@@ -279,14 +298,127 @@ public class Layout extends JFrame
         delete.setBounds(160, 600, 90, 30);
         jp.add(delete);
 
-
-
-
-
-
-
-
-
-
     }
+
+    private void createIcons()
+    {
+        trueic = new ImageIcon("src/icons/dot1.png");
+        falseic = new ImageIcon("src/icons/dot2.png");
+        trueredic = new ImageIcon(trueic.getImage().getScaledInstance(dniIC.getWidth(), dniIC.getHeight(), Image.SCALE_SMOOTH));
+        falseredic = new ImageIcon(falseic.getImage().getScaledInstance(dniIC.getWidth(), dniIC.getHeight(), Image.SCALE_SMOOTH));
+    }
+
+    private void addKeyListenerToTextField()
+    {
+
+        KeyListener ki = new KeyListener()
+        {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e)
+            {
+                if(e.getComponent().equals(jname))
+                {
+                    if(isonlytext(jname))  nameIC.setIcon(trueredic);
+
+                    else nameIC.setIcon(falseredic);
+                }
+
+                if(e.getComponent().equals(jdni))
+                {
+                    if(dnicheck(jdni)) dniIC.setIcon(trueredic);
+
+
+                    else dniIC.setIcon(falseredic);
+                }
+
+                if(e.getComponent().equals(jsurname))
+                {
+                    if(isonlytext(jsurname)) surnameIC.setIcon(trueredic);
+
+                    else surnameIC.setIcon(falseredic);
+
+
+                }
+
+                if(e.getComponent().equals(jpersonnumb))
+                {
+                    if(isonlynumbers(jpersonnumb)) guestsIC.setIcon(trueredic);
+
+                    else guestsIC.setIcon(falseredic);
+                }
+
+                if(e.getComponent().equals(jnightnumb))
+                {
+                    if(isonlynumbers(jnightnumb)) nightsIC.setIcon(trueredic);
+
+                    else nightsIC.setIcon(falseredic);
+                }
+
+                if(isonlytext(jname) && isonlytext(jsurname) && dnicheck(jdni) && isonlynumbers(jpersonnumb) && isonlynumbers(jnightnumb)) booking.setEnabled(true);
+
+                else booking.setEnabled(false);
+
+
+
+
+            }
+        };
+        jname.addKeyListener(ki);
+        jdni.addKeyListener(ki);
+        jsurname.addKeyListener(ki);
+        jpersonnumb.addKeyListener(ki);
+        jnightnumb.addKeyListener(ki);
+    }
+
+    private boolean isonlynumbers(JTextField text)
+    {
+        if(text.getText().matches("\\d+"))
+        {
+            return true;
+        }
+
+        else
+            {
+                return false;
+            }
+    }
+
+    private boolean isonlytext(JTextField text)
+    {
+        if(text.getText().matches("[a-zA-Z]+\\.?"))
+        {
+            return true;
+        }
+
+        else return false;
+    }
+
+    private boolean dnicheck(JTextField text)
+    {
+        if(text.getText().matches("(?=.*[0-9])(?=.*[A-Z]).{9,9}"))
+        {
+            return true;
+        }
+
+        else return false;
+    }
+
+
+
+
+
+
+
+
+
 }
