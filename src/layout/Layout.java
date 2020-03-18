@@ -1,26 +1,35 @@
 package layout;
 import com.toedter.calendar.JCalendar;
 import com.toedter.calendar.JDateChooser;
-
+import classes.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.time.LocalDate;
 
 public class Layout extends JFrame
 {
-    private static final long serialVersionUID = 1L;
+    public int bookid = 1;
+    public ArrayList<Client> clients = new ArrayList<>();
+    public ArrayList<Booking> bookings = new ArrayList<>();
+    public ArrayList<Hotel> hotels = new ArrayList<>();
+    public static final long serialVersionUID = 1L;
     public JPanel panel;
     public JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname, dniIC, nameIC, surnameIC, guestsIC, nightsIC, hotelIC, roomnumbIC, getPersonnumbbackIC;
     public JTable management2, management1;
-    public JButton booking, save, save1, delete;
+    public JButton bookingit, save, save1, delete;
     public JDateChooser choosedate;
     public JCalendar bookdate;
     public JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking, area1, area2;
     public ImageIcon trueic, falseic, falseredic, trueredic;
+    public DefaultTableModel deftable, deftable2;
 
     public Layout()
     {
@@ -41,6 +50,9 @@ public class Layout extends JFrame
         addTextBack();
         createIcons();
         addKeyListenerToTextField();
+        addHotelName();
+        getBookingInfo();
+
     }
 
     public void addPanels()
@@ -91,10 +103,10 @@ public class Layout extends JFrame
         managtext.setHorizontalAlignment(SwingConstants.LEFT);
         jp.add(managtext);
 
-        DefaultTableModel deftable = new DefaultTableModel();
+        deftable = new DefaultTableModel();
         deftable.addColumn("Booking ID");
         deftable.addColumn("Day");
-        deftable.addColumn("Persons");
+        deftable.addColumn("Guests");
         deftable.addColumn("Room number");
         management1 = new JTable(deftable);
         management1.setBounds(5, 130, 360, 200);
@@ -113,7 +125,12 @@ public class Layout extends JFrame
         jp.add(managtext1);
 
 
-        management2 = new JTable(deftable);
+        deftable2 = new DefaultTableModel();
+        deftable2.addColumn("Booking ID");
+        deftable2.addColumn("Day");
+        deftable2.addColumn("Guests");
+        deftable2.addColumn("Room number");
+        management2 = new JTable(deftable2);
         management2.setBounds(5, 400, 360, 200);
         management2.setFont(new Font("Montserrat", Font.PLAIN, 14));
         jp.add(management2);
@@ -211,10 +228,10 @@ public class Layout extends JFrame
         bookdate.setBounds(50, 330, 280, 220);
         jp.add(bookdate);
 
-        booking = new JButton("Book now!");
-        booking.setBounds(120, 590, 150, 30);
-        booking.setEnabled(false);
-        jp.add(booking);
+        bookingit = new JButton("Book now!");
+        bookingit.setBounds(120, 590, 150, 30);
+        bookingit.setEnabled(false);
+        jp.add(bookingit);
 
 
     }
@@ -238,7 +255,7 @@ public class Layout extends JFrame
         jp.add(jhotel);
 
         save = new JButton("Save!");
-        save.setEnabled(false);
+        save.setEnabled(true);
         save.setBounds(160, 135, 90, 30);
         jp.add(save);
 
@@ -267,7 +284,7 @@ public class Layout extends JFrame
 
         save1 = new JButton("Save!");
         save1.setBounds(160,265,90,30);
-        save1.setEnabled(false);
+        save1.setEnabled(true);
         jp.add(save1);
 
 
@@ -294,7 +311,7 @@ public class Layout extends JFrame
         jp.add(area2);
 
         delete = new JButton("Delete!");
-        delete.setEnabled(false);
+        delete.setEnabled(true);
         delete.setBounds(160, 600, 90, 30);
         jp.add(delete);
 
@@ -364,9 +381,9 @@ public class Layout extends JFrame
                     else nightsIC.setIcon(falseredic);
                 }
 
-                if(isonlytext(jname) && isonlytext(jsurname) && dnicheck(jdni) && isonlynumbers(jpersonnumb) && isonlynumbers(jnightnumb)) booking.setEnabled(true);
+                if(isonlytext(jname) && isonlytext(jsurname) && dnicheck(jdni) && isonlynumbers(jpersonnumb) && isonlynumbers(jnightnumb)) bookingit.setEnabled(true);
 
-                else booking.setEnabled(false);
+                else bookingit.setEnabled(false);
 
 
 
@@ -413,6 +430,99 @@ public class Layout extends JFrame
         else return false;
 
     }
+
+    private void addHotelName()
+    {
+
+        ActionListener ac = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if(e.getSource() == save && !jhotel.getText().isBlank()) {
+                    Layout.super.setTitle(jhotel.getText());
+                }
+
+
+            }
+        }; save.addActionListener(ac);
+
+    }
+
+    private void getBookingInfo()
+    {
+        ActionListener ac = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(e.getSource() == bookingit)
+                {
+
+                    int numb = Integer.parseInt(jpersonnumb.getText());
+                    int nights = Integer.parseInt(jnightnumb.getText());
+                    Client client = new Client(jdni.getText().toString(), jname.getText().toString() ,jsurname.getText().toString());
+                    LocalDate ld = returnLDfromJcal(bookdate);
+                    Booking booking = new Booking(bookid, numb, nights, client, ld);
+                    bookings.add(booking);
+                    deftable.addRow(new Object[] {client.getDNI(),ld.getDayOfMonth()+"/"+ld.getMonthValue()+"/"+ld.getYear(), booking.getPersonNumb()});
+                    boolean allowed = checkIfClientNotNeW(clients);
+                    if(allowed) clients.add(client);
+                    clearText();
+                    clearIcons();
+                    bookingit.setEnabled(false);
+
+
+
+                }
+
+            }
+        };
+        bookingit.addActionListener(ac);
+    }
+
+
+    private void clearText()
+    {
+        jdni.setText(null);
+        jname.setText(null);
+        jsurname.setText(null);
+        jpersonnumb.setText(null);
+        jnightnumb.setText(null);
+
+    }
+
+    private void clearIcons()
+    {
+        dniIC.setIcon(null);
+        nameIC.setIcon(null);
+        surnameIC.setIcon(null);
+        nightsIC.setIcon(null);
+        guestsIC.setIcon(null);
+
+    }
+
+    private boolean checkIfClientNotNeW(ArrayList<Client> clients)
+    {
+        for(Client c : clients)
+        {
+            if(c.getDNI().equals(jdni.getText().toString()))
+            {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private LocalDate returnLDfromJcal(Component c)
+    {
+        JCalendar jc = ((JCalendar) c);
+        long ms = jc.getDate().getTime();
+        return Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+
+
+
 
 
 
