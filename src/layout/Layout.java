@@ -16,6 +16,7 @@ import java.time.LocalDate;
 
 public class Layout extends JFrame
 {
+    // so i can commit properly
     public int bookid = 1;
     public ArrayList<Client> clients = new ArrayList<>();
     public ArrayList<Booking> bookings = new ArrayList<>();
