@@ -370,19 +370,19 @@ public class Layout extends JFrame
 
                 if(e.getComponent().equals(jpersonnumb))
                 {
-                    if(isonlynumbers(jpersonnumb)) guestsIC.setIcon(trueredic);
+                    if(isonlynumbersguests(jpersonnumb)) guestsIC.setIcon(trueredic);
 
                     else guestsIC.setIcon(falseredic);
                 }
 
                 if(e.getComponent().equals(jnightnumb))
                 {
-                    if(isonlynumbers(jnightnumb)) nightsIC.setIcon(trueredic);
+                    if(isonlynumbersnights(jnightnumb)) nightsIC.setIcon(trueredic);
 
                     else nightsIC.setIcon(falseredic);
                 }
 
-                if(isonlytext(jname) && isonlytext(jsurname) && dnicheck(jdni) && isonlynumbers(jpersonnumb) && isonlynumbers(jnightnumb)) bookingit.setEnabled(true);
+                if(isonlytext(jname) && isonlytext(jsurname) && dnicheck(jdni) && isonlynumbersguests(jpersonnumb) && isonlynumbersnights(jnightnumb)) bookingit.setEnabled(true);
 
                 else bookingit.setEnabled(false);
 
@@ -398,11 +398,16 @@ public class Layout extends JFrame
         jnightnumb.addKeyListener(ki);
     }
 
-    private boolean isonlynumbers(JTextField text)
+    private boolean isonlynumbersguests(JTextField text)
     {
         if(text.getText().matches("\\d+"))
         {
-            return true;
+            if(Integer.parseInt(text.getText()) < 5)
+            {
+                return true;
+            }
+
+            else return false;
         }
 
         else
@@ -411,9 +416,27 @@ public class Layout extends JFrame
             }
     }
 
+    private boolean isonlynumbersnights(JTextField text)
+    {
+        if(text.getText().matches("\\d+"))
+        {
+            if(Integer.parseInt(text.getText()) < 31)
+            {
+                return true;
+            }
+
+            else return  false;
+        }
+
+        else
+        {
+            return false;
+        }
+    }
+
     private boolean isonlytext(JTextField text)
     {
-        if(text.getText().matches("[a-zA-Z]+\\.?"))
+        if(text.getText().matches("[a-zA-Z]+\\.?") || text.getText().matches("[a-zA-ZñÑáéíóúÁÉÍÓÚ]+\\.?") || text.getText().matches("[a-zA-ZñÑáéíóúÁÉÍÓÚ_ ]+\\.?") || text.getText().matches("[a-zA-Z_ ]+\\.?"))
         {
             return true;
         }
@@ -423,7 +446,7 @@ public class Layout extends JFrame
 
     private boolean dnicheck(JTextField text)
     {
-        if(text.getText().matches("(?=.*[0-9])(?=.*[A-Z]).{9,9}"))
+        if(text.getText().matches("(?=.*[0-9])(?=.*[A-Za-z]).{9,9}"))
         {
             return true;
         }
