@@ -13,24 +13,28 @@ import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.time.LocalDate;
+import controller.*;
 
 public class Layout extends JFrame
 {
     // so i can commit properly
-    public int bookid = 1;
-    public ArrayList<Client> clients = new ArrayList<>();
-    public ArrayList<Booking> bookings = new ArrayList<>();
-    public ArrayList<Hotel> hotels = new ArrayList<>();
+
+    public static Hotel currentHotel;
+    public static ArrayList<Room> rooms = new ArrayList<>();
+    public static ArrayList<Client> clients = new ArrayList<>();
+    public static ArrayList<Booking> bookings = new ArrayList<>();
+    public static ArrayList<Hotel> hotels = new ArrayList<>();
     public static final long serialVersionUID = 1L;
     public JPanel panel;
-    public JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname, dniIC, nameIC, surnameIC, guestsIC, nightsIC, hotelIC, roomnumbIC, getPersonnumbbackIC;
+    public static JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname, dniIC, nameIC, surnameIC, guestsIC, nightsIC, hotelIC, roomnumbIC, getPersonnumbbackIC;
     public JTable management2, management1;
     public JButton bookingit, save, save1, delete;
     public JDateChooser choosedate;
-    public JCalendar bookdate;
-    public JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking, area1, area2;
-    public ImageIcon trueic, falseic, falseredic, trueredic;
-    public DefaultTableModel deftable, deftable2;
+    public static JCalendar bookdate;
+    public static JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking, area1, area2;
+    public ImageIcon  trueic, falseic, falseredic, trueredic;
+    public static DefaultTableModel deftable, deftable2;
+    public static JOptionPane jop;
 
     public Layout()
     {
@@ -53,6 +57,7 @@ public class Layout extends JFrame
         addKeyListenerToTextField();
         addHotelName();
         getBookingInfo();
+        registerRoomButton();
 
     }
 
@@ -462,8 +467,62 @@ public class Layout extends JFrame
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                if(e.getSource() == save && !jhotel.getText().isBlank()) {
-                    Layout.super.setTitle(jhotel.getText());
+                if(e.getSource() == save && !jhotel.getText().isBlank())
+                {
+                    if(hotels.size() == 0)
+                    {
+                        System.out.println("check");
+                        Layout.super.setTitle(jhotel.getText());
+                        Hotel hotel = new Hotel(jhotel.getText());
+                        currentHotel = hotel;
+                        hotels.add(hotel);
+                    }
+
+                    else
+                        {
+
+
+                            Hotel hotel = Controller.checkIfHotelExists(jhotel, hotels);
+                            if(hotel != null)
+                            {
+                                System.out.println("in");
+                                int option = jop.showConfirmDialog(null, "This hotel name already exists, would you like to access it's management panel?");
+                                switch (option){
+                                    case 0:
+
+                                        currentHotel.setRoomList(rooms);
+                                        currentHotel.setPendentList(bookings);
+                                        currentHotel.setClientList(clients);
+                                        Layout.super.setTitle(jhotel.getText());
+                                        currentHotel = hotel;
+                                        rooms = currentHotel.getRoomList();
+                                        bookings = currentHotel.getPendentList();
+                                        clients = currentHotel.getClientList();
+                                        jop.showMessageDialog(null,"Access allowed!");
+                                        break;
+
+                                    case 1:
+
+                                        break;
+                                    case 2:
+                                        break;
+
+                                }
+                            }
+                            else
+                                {
+                                    currentHotel.setRoomList(rooms);
+                                    currentHotel.setPendentList(bookings);
+                                    currentHotel.setClientList(clients);
+                                    Layout.super.setTitle(jhotel.getText());
+                                    hotel = new Hotel(jhotel.getText());
+                                    currentHotel = hotel;
+                                    rooms = currentHotel.getRoomList();
+                                    bookings = currentHotel.getPendentList();
+                                    clients = currentHotel.getClientList();
+                                    hotels.add(hotel);
+                                }
+                        }
                 }
 
 
@@ -480,17 +539,8 @@ public class Layout extends JFrame
                 if(e.getSource() == bookingit)
                 {
 
-                    int numb = Integer.parseInt(jpersonnumb.getText());
-                    int nights = Integer.parseInt(jnightnumb.getText());
-                    Client client = new Client(jdni.getText().toString(), jname.getText().toString() ,jsurname.getText().toString());
-                    LocalDate ld = returnLDfromJcal(bookdate);
-                    Booking booking = new Booking(bookid, numb, nights, client, ld);
-                    bookings.add(booking);
-                    deftable.addRow(new Object[] {client.getDNI(),ld.getDayOfMonth()+"/"+ld.getMonthValue()+"/"+ld.getYear(), booking.getPersonNumb()});
-                    boolean allowed = checkIfClientNotNeW(clients);
-                    if(allowed) clients.add(client);
-                    clearText();
-                    clearIcons();
+                    Controller.addData();
+
                     bookingit.setEnabled(false);
 
 
@@ -502,47 +552,54 @@ public class Layout extends JFrame
         bookingit.addActionListener(ac);
     }
 
-
-    private void clearText()
+    private void registerRoomButton()
     {
-        jdni.setText(null);
-        jname.setText(null);
-        jsurname.setText(null);
-        jpersonnumb.setText(null);
-        jnightnumb.setText(null);
+        ActionListener ac =  new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(e.getSource() == save1)
+                {
+                    int persnumb = Integer.parseInt(jpersonnumbback.getText());
+                    int roomnumb = Integer.parseInt(jroomnumb.getText());
+                    Room r = Controller.registerRoom(roomnumb, persnumb, rooms);
+                    if(r == null)
+                    {
+                        Room room = new Room(roomnumb, persnumb);
+                        rooms.add(room);
+                        currentHotel.setRoomList(rooms);
+                        jop.showMessageDialog(null, "Room added successfully!");
+                    }
 
-    }
+                    else
+                        {
+                            int sum = r.getCapacity() + persnumb;
 
-    private void clearIcons()
-    {
-        dniIC.setIcon(null);
-        nameIC.setIcon(null);
-        surnameIC.setIcon(null);
-        nightsIC.setIcon(null);
-        guestsIC.setIcon(null);
+                            int option = jop.showConfirmDialog(null, "This room already exists, would you like to update the max capacity to "+ sum+" ?");
+                           switch (option)
+                           {
+                               case 0:
 
-    }
 
-    private boolean checkIfClientNotNeW(ArrayList<Client> clients)
-    {
-        for(Client c : clients)
-        {
-            if(c.getDNI().equals(jdni.getText().toString()))
-            {
+                                   r.setCapacity(sum);
+                                   jop.showMessageDialog(null, "Capacity updated successfully!");
+                                   break;
 
-                return true;
+                               case 1:
+
+                                    break;
+                               case 2:
+
+                                    break;
+                           }
+                        }
+                }
             }
-        }
-
-        return false;
+        }; save1.addActionListener(ac);
     }
 
-    private LocalDate returnLDfromJcal(Component c)
-    {
-        JCalendar jc = ((JCalendar) c);
-        long ms = jc.getDate().getTime();
-        return Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).toLocalDate();
-    }
+
+
+
 
 
 

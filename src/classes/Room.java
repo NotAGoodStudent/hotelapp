@@ -1,17 +1,14 @@
 package classes;
 
 import java.util.ArrayList;
-public class Room
-{
+public class Room {
+
     private int roomnumb;
     private int capacity;
-    private boolean hasDoubleBed;
 
-
-    public Room(int roomnumb, int capacity, boolean hasDoubleBed) {
+    public Room(int roomnumb, int capacity) {
         this.roomnumb = roomnumb;
         this.capacity = capacity;
-        this.hasDoubleBed = hasDoubleBed;
     }
 
     public int getRoomnumb() {
@@ -30,11 +27,4 @@ public class Room
         this.capacity = capacity;
     }
 
-    public boolean isHasDoubleBed() {
-        return hasDoubleBed;
-    }
-
-    public void setHasDoubleBed(boolean hasDoubleBed) {
-        this.hasDoubleBed = hasDoubleBed;
-    }
 }
