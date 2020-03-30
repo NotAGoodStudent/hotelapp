@@ -3,17 +3,18 @@ import com.toedter.calendar.JCalendar;
 import com.toedter.calendar.JDateChooser;
 import classes.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
+import java.awt.print.Book;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.time.LocalDate;
 import controller.*;
+import org.w3c.dom.ls.LSOutput;
 
 public class Layout extends JFrame
 {
@@ -23,18 +24,23 @@ public class Layout extends JFrame
     public static ArrayList<Room> rooms = new ArrayList<>();
     public static ArrayList<Client> clients = new ArrayList<>();
     public static ArrayList<Booking> bookings = new ArrayList<>();
+    public static ArrayList<Booking> confirmedBookings = new ArrayList<>();
     public static ArrayList<Hotel> hotels = new ArrayList<>();
     public static final long serialVersionUID = 1L;
     public JPanel panel;
     public static JLabel managtext, managtext1, managtext2, dni, name, surname, guests, nights, caltext, hotelname, addroom, roomnumb, personnumb, checkbooking, intrname, dniIC, nameIC, surnameIC, guestsIC, nightsIC, hotelIC, roomnumbIC, getPersonnumbbackIC;
-    public JTable management2, management1;
+    public static JTable management2, management1;
     public JButton bookingit, save, save1, delete;
     public JDateChooser choosedate;
     public static JCalendar bookdate;
-    public static JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking, area1, area2;
+    public static JTextField jdni, jname, jsurname, jpersonnumb, jnightnumb, jhotel, jroomnumb,  jpersonnumbback, jcheckbooking;
     public ImageIcon  trueic, falseic, falseredic, trueredic;
     public static DefaultTableModel deftable, deftable2;
     public static JOptionPane jop;
+    public static JToggleButton jtb;
+    public static DefaultListModel defclilist, defbookinglist;
+    public static JList<Client> jlistcli;
+    public static JList<Booking> jlistbooking;
 
     public Layout()
     {
@@ -45,6 +51,7 @@ public class Layout extends JFrame
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(null);
         initComponents();
+
     }
 
     private void initComponents()
@@ -58,6 +65,10 @@ public class Layout extends JFrame
         addHotelName();
         getBookingInfo();
         registerRoomButton();
+        confirmBooking();
+        confirmedBookingsTogggle();
+        findClientCoincidence();
+        jbookingListener();
 
     }
 
@@ -125,16 +136,16 @@ public class Layout extends JFrame
 
 
         managtext1 = defineFontNonTitle();
-        managtext1.setText("Bookings: ");
-        managtext1.setBounds(5, 370, jp.getWidth(), 17);
+        managtext1.setText("Confirmed bookings: ");
+        managtext1.setBounds(5, 340, jp.getWidth(), 17);
         managtext1.setHorizontalAlignment(SwingConstants.LEFT);
         jp.add(managtext1);
 
 
         deftable2 = new DefaultTableModel();
-        deftable2.addColumn("Booking ID");
-        deftable2.addColumn("Day");
-        deftable2.addColumn("Guests");
+        deftable2.addColumn("ID");
+        deftable2.addColumn("Name");
+        deftable2.addColumn("Surname");
         deftable2.addColumn("Room number");
         management2 = new JTable(deftable2);
         management2.setBounds(5, 400, 360, 200);
@@ -149,6 +160,9 @@ public class Layout extends JFrame
         choosedate.setBounds(265, 370 ,100, 20);
         jp.add(choosedate);
 
+        jtb = new JToggleButton("In: ");
+        jtb.setBounds(5, 370, 70, 20);
+        jp.add(jtb);
     }
 
     public void addTextClient()
@@ -308,13 +322,17 @@ public class Layout extends JFrame
         intrname.setBounds(8,360, jp.getWidth(), 17);
         jp.add(intrname);
 
-        area1 = new JTextField();
-        area1.setBounds(8, 400, 150, 150);
-        jp.add(area1);
+        defclilist = new DefaultListModel();
 
-        area2 = new JTextField();
-        area2.setBounds(230, 400, 150, 150);
-        jp.add(area2);
+        jlistcli = new JList<>(defclilist);
+        jlistcli.setBounds(8, 400, 150, 150);
+        jp.add(jlistcli);
+
+        defbookinglist = new DefaultListModel();
+
+        jlistbooking = new JList<>(defbookinglist);
+        jlistbooking.setBounds(230, 400, 150, 150);
+        jp.add(jlistbooking);
 
         delete = new JButton("Delete!");
         delete.setEnabled(true);
@@ -493,11 +511,13 @@ public class Layout extends JFrame
                                         currentHotel.setRoomList(rooms);
                                         currentHotel.setPendentList(bookings);
                                         currentHotel.setClientList(clients);
+                                        currentHotel.setConfirmedList(confirmedBookings);
                                         Layout.super.setTitle(jhotel.getText());
                                         currentHotel = hotel;
                                         rooms = currentHotel.getRoomList();
                                         bookings = currentHotel.getPendentList();
                                         clients = currentHotel.getClientList();
+                                        confirmedBookings = currentHotel.getConfirmedList();
                                         jop.showMessageDialog(null,"Access allowed!");
                                         break;
 
@@ -514,12 +534,14 @@ public class Layout extends JFrame
                                     currentHotel.setRoomList(rooms);
                                     currentHotel.setPendentList(bookings);
                                     currentHotel.setClientList(clients);
+                                    currentHotel.setConfirmedList(confirmedBookings);
                                     Layout.super.setTitle(jhotel.getText());
                                     hotel = new Hotel(jhotel.getText());
                                     currentHotel = hotel;
                                     rooms = currentHotel.getRoomList();
                                     bookings = currentHotel.getPendentList();
                                     clients = currentHotel.getClientList();
+                                    confirmedBookings = currentHotel.getConfirmedList();
                                     hotels.add(hotel);
                                 }
                         }
@@ -557,60 +579,156 @@ public class Layout extends JFrame
         ActionListener ac =  new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(e.getSource() == save1)
+
+                int persnumb = Integer.parseInt(jpersonnumbback.getText());
+                int roomnumb = Integer.parseInt(jroomnumb.getText());
+                Room r = Controller.registerRoom(roomnumb, persnumb, rooms);
+                if(r == null)
                 {
-                    int persnumb = Integer.parseInt(jpersonnumbback.getText());
-                    int roomnumb = Integer.parseInt(jroomnumb.getText());
-                    Room r = Controller.registerRoom(roomnumb, persnumb, rooms);
-                    if(r == null)
+                    Room room = new Room(roomnumb, persnumb);
+                    rooms.add(room);
+                    currentHotel.setRoomList(rooms);
+                    jop.showMessageDialog(null, "Room added successfully!");
+                }
+
+                else
                     {
-                        Room room = new Room(roomnumb, persnumb);
-                        rooms.add(room);
-                        currentHotel.setRoomList(rooms);
-                        jop.showMessageDialog(null, "Room added successfully!");
-                    }
+                        int sum = r.getCapacity() + persnumb;
 
-                    else
+                        int option = jop.showConfirmDialog(null, "This room already exists, would you like to update the max capacity to "+ sum+" ?");
+                        switch (option)
                         {
-                            int sum = r.getCapacity() + persnumb;
+                            case 0:
 
-                            int option = jop.showConfirmDialog(null, "This room already exists, would you like to update the max capacity to "+ sum+" ?");
-                           switch (option)
-                           {
-                               case 0:
+                                r.setCapacity(sum);
+                                jop.showMessageDialog(null, "Capacity updated successfully!");
+                                break;
 
-
-                                   r.setCapacity(sum);
-                                   jop.showMessageDialog(null, "Capacity updated successfully!");
-                                   break;
-
-                               case 1:
+                                case 1:
 
                                     break;
+
                                case 2:
 
-                                    break;
+
+                                   break;
                            }
                         }
                 }
-            }
+
         }; save1.addActionListener(ac);
     }
 
 
+    private void confirmBooking()
+    {
+        management1.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                if(e.getClickCount() == 2)
+                {
+                    Controller.addConfirmation(e, currentHotel);
+                }
+            }
+        });
+    }
+
+    private void confirmedBookingsTogggle()
+    {
+        ActionListener ac = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if(jtb.isSelected())
+                {
+                    jtb.setText("Out: ");
+                    Controller.clearTable(Layout.deftable2);
+                    Controller.listBookingsOut(choosedate);
+
+                }
+
+                else
+                    {
+                        jtb.setText("In: ");
+                        Controller.clearTable(Layout.deftable2);
+                        Controller.listBookingsIn(choosedate);
+                    }
+            }
+        };
+        jtb.addActionListener(ac);
+    }
+
+    private void findClientCoincidence()
+    {
+       KeyListener kl = new KeyListener() {
+           @Override
+           public void keyTyped(KeyEvent e)
+           {
+
+           }
+
+           @Override
+           public void keyPressed(KeyEvent e) {
+
+           }
+
+           @Override
+           public void keyReleased(KeyEvent e)
+           {
+               if(jcheckbooking.getText().isEmpty())
+               {
+                   defclilist.clear();
+                   defbookinglist.clear();
+                   Controller.checkSavedCoincidences.clear();
+               }
+
+               else
+                   {
+
+                       ArrayList<Booking> findCoincidence = Hotel.addToCliJlist(jcheckbooking);
+                       Controller.addCoincidences(findCoincidence);
+                       ListSelectionListener lsl = new ListSelectionListener() {
+                           @Override
+                           public void valueChanged(ListSelectionEvent e)
+                           {
+
+                               Client cli = jlistcli.getSelectedValue();
+                               System.out.println(cli);
+                               Controller.addCoincidencesBooking(findCoincidence, cli);
+                           }
+                       }; jlistcli.addListSelectionListener(lsl);
 
 
+                   }
 
 
+           }
 
+       };jcheckbooking.addKeyListener(kl);
 
+    }
 
+    private void jbookingListener()
+    {
+        ListSelectionListener lsl = new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e)
+            {
+                Booking b = jlistbooking.getSelectedValue();
 
+                ActionListener al = new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        System.out.println("Removing");
+                        bookings.remove(b);
+                        defbookinglist.removeElement(b);
+                    }
+                };delete.addActionListener(al);
 
-
-
-
-
+            }
+        };jlistbooking.addListSelectionListener(lsl);
+    }
 
 
 

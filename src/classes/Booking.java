@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public class Booking
 {
+    private int id;
     private LocalDate start;
     private int personNumb;
     private int nights;
@@ -66,4 +67,13 @@ public class Booking
     public void setRoom(Room room) {
         this.room = room;
     }
+
+
+    @Override
+    public String toString()
+    {
+        return this.getStart() + " - " +"Guests: "+ this.getPersonNumb();
+    }
+
+
 }

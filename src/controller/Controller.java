@@ -2,21 +2,30 @@ package controller;
 
 import classes.Client;
 import com.toedter.calendar.JCalendar;
+import com.toedter.calendar.JDateChooser;
 import layout.Layout;
 import classes.*;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.print.Book;
+import java.lang.reflect.Array;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 public class Controller
 {
 
 
+    public static ArrayList<Booking> checkSavedCoincidences = new ArrayList<>();
+    public static ArrayList<Booking> checkSavedCoincidencesBooking = new ArrayList<>();
     public static void addData()
     {
         int numb = Integer.parseInt(Layout.jpersonnumb.getText());
@@ -37,7 +46,7 @@ public class Controller
                 System.out.println(Layout.currentHotel.getPendentList().isEmpty());
                 Layout.deftable.addRow(new Object[]{client.getDNI().toUpperCase(), gotIn.getDayOfMonth() + "/" + gotIn.getMonthValue() + "/" + gotIn.getYear(), booking.getPersonNumb(), r.getRoomnumb()});
                 Client c = Controller.checkIfClientNotNeW(Layout.clients, Layout.jdni);
-                if (c != null) Layout.clients.add(client);
+                if (c == null) Layout.clients.add(client);
                 Controller.clearText();
                 Controller.clearIcons();
 
@@ -96,18 +105,18 @@ public class Controller
             return null;
         }
         else
+        {
+            for (Room r : rooms)
             {
-                for (Room r : rooms)
+
+                if (r.getRoomnumb() == roomNum)
                 {
-
-                    if (r.getRoomnumb() == roomNum)
-                    {
-                        return r;
-                    }
+                    return r;
                 }
-                return null;
-
             }
+            return null;
+
+        }
 
 
 
@@ -139,5 +148,149 @@ public class Controller
 
         return false;
     }
+
+    public static void addConfirmation(MouseEvent e, Hotel currentHotel)
+    {
+        int row = Layout.management1.rowAtPoint(e.getPoint());
+        Booking propbooking = returnCliBooking((String) Layout.management1.getValueAt(row, 0));
+        Layout.deftable2.addRow(new Object[]{Layout.management1.getValueAt(row, 0), propbooking.getClient().getName(), propbooking.getClient().getSurname(), Layout.management1.getValueAt(row, 3)});
+        String id = (String) Layout.deftable.getValueAt(row, 0);
+        String lili =  (String) Layout.deftable.getValueAt(row, 1);
+        String[] ldStr = lili.split("/");
+        LocalDate fild = returnLD(ldStr);
+        Layout.deftable.removeRow(row);
+
+        System.out.println(fild);
+
+        for(Booking b : currentHotel.getPendentList())
+        {
+
+            if(b.getClient().getDNI().equalsIgnoreCase(id) && b.getStart().isEqual(fild))
+            {
+                System.out.println("YESS");
+                Layout.confirmedBookings.add(b);
+                break;
+            }
+        }
+
+
+    }
+
+    public static LocalDate returnLD(String[] ld)
+    {
+        int numb[] = new int[ld.length];
+        for(int x = 0; x < ld.length;x++)
+        {
+            numb[x] = Integer.parseInt(ld[x]);
+        }
+
+        LocalDate ldd = LocalDate.of(numb[2], numb[1], numb[0]);
+        System.out.println(ldd);
+        return ldd;
+    }
+
+    public static void listBookingsIn(JDateChooser jdc)
+    {
+        LocalDate ld = getLDfromJChooser(jdc);
+        for(Booking b : Layout.confirmedBookings)
+        {
+            System.out.println(b.getEnd());
+            if(b.getStart().isEqual(ld))
+            {
+                Layout.deftable2.addRow(new Object[]{b.getClient().getDNI().toUpperCase(),  b.getClient().getName(), b.getClient().getSurname(), b.getRoom().getRoomnumb()});
+            }
+        }
+    }
+
+    public static void listBookingsOut(JDateChooser jdc)
+    {
+        LocalDate ld = getLDfromJChooser(jdc);
+
+
+        System.out.println(Layout.confirmedBookings.isEmpty());
+        for(Booking b : Layout.confirmedBookings)
+        {
+            System.out.println(b.getEnd());
+            if(b.getEnd().isEqual(ld))
+            {
+                Layout.deftable2.addRow(new Object[]{b.getClient().getDNI().toUpperCase(),  b.getClient().getName(), b.getClient().getSurname(), b.getRoom().getRoomnumb()});
+            }
+        }
+    }
+
+    public static LocalDate getLDfromJChooser(JDateChooser jdc)
+    {
+        Date date = jdc.getDate();
+        return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    public static Booking returnCliBooking(String id)
+    {
+        for(Booking  b : Layout.bookings)
+        {
+
+            if(b.getClient().getDNI().equalsIgnoreCase(id))
+            {
+                return b;
+            }
+        }
+
+        return null;
+    }
+
+    public static void clearTable(DefaultTableModel deftable2)
+    {
+       while(deftable2.getRowCount()> 0) deftable2.removeRow(0);
+    }
+
+    public static void addCoincidences(ArrayList<Booking> savedCoincidences)
+    {
+        for(Booking b : savedCoincidences)
+        {
+            if(!checkNotRepeated(savedCoincidences, checkSavedCoincidences))
+            {
+                Client c = b.getClient();
+                Layout.defclilist.addElement(c);
+                checkSavedCoincidences.add(b);
+            }
+        }
+    }
+
+    public static boolean checkNotRepeated(ArrayList<Booking> savedCoincidences, ArrayList<Booking> repeated)
+    {
+        for(Booking b : savedCoincidences){
+
+            for(Booking rep : repeated)  {
+
+                if(b == rep)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void addCoincidencesBooking(ArrayList<Booking> savedCoincidences, Client cli)
+    {
+
+        for(Booking b : savedCoincidences)
+        {
+            if(b.getClient().getDNI().equalsIgnoreCase(cli.getDNI()))
+            {
+
+                System.out.println("inn");
+                Layout.defbookinglist.addElement(b);
+
+
+            }
+        }
+    }
+
+
+
+
+
+
 
 }

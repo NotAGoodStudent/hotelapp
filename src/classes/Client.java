@@ -36,6 +36,14 @@ public class Client
     public void setSurname(String surname) {
         this.surname = surname;
     }
+
+    @Override
+    public String toString()
+    {
+        return this.getName().toUpperCase().charAt(0) + "." + this.getSurname() + " - " + this.getDNI();
+    }
+
+
 }
 
 

@@ -1,6 +1,8 @@
 package classes;
 import classes.*;
+import layout.Layout;
 
+import javax.swing.*;
 import java.util.ArrayList;
 
 public class Hotel
@@ -54,5 +56,24 @@ public class Hotel
 
     public void setConfirmedList(ArrayList<Booking> confirmedList) {
         this.confirmedList = confirmedList;
+    }
+
+
+    public static ArrayList addToCliJlist (JTextField intrname)
+    {
+
+        ArrayList<Booking> bookings = new ArrayList<>();
+        String text = intrname.getText().toLowerCase();
+        for(Booking c : Layout.bookings)
+        {
+            if(c.getClient().getDNI().toLowerCase().contains(text) || c.getClient().getName().toLowerCase().contains(text) || c.getClient().getSurname().toLowerCase().contains(text))
+            {
+                bookings.add(c);
+
+            }
+
+
+        }
+        return bookings;
     }
 }
