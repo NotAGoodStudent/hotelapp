@@ -10,8 +10,7 @@ public class Hotel
     private String hotelName;
     private ArrayList <Room> roomList = new ArrayList<>();
     private ArrayList <Client> clientList = new ArrayList<>();
-    private ArrayList <Booking> pendentList = new ArrayList<>();
-    private ArrayList <Booking> confirmedList = new ArrayList<>();
+    private ArrayList <Booking> bookings = new ArrayList<>();
 
     public Hotel(String hotelName)
     {
@@ -42,38 +41,11 @@ public class Hotel
         this.clientList = clientList;
     }
 
-    public ArrayList<Booking> getPendentList() {
-        return pendentList;
-    }
-
-    public void setPendentList(ArrayList<Booking> pendentList) {
-        this.pendentList = pendentList;
-    }
-
-    public ArrayList<Booking> getConfirmedList() {
-        return confirmedList;
-    }
-
-    public void setConfirmedList(ArrayList<Booking> confirmedList) {
-        this.confirmedList = confirmedList;
-    }
-
-
-    public static ArrayList addToCliJlist (JTextField intrname)
-    {
-
-        ArrayList<Booking> bookings = new ArrayList<>();
-        String text = intrname.getText().toLowerCase();
-        for(Booking c : Layout.bookings)
-        {
-            if(c.getClient().getDNI().toLowerCase().contains(text) || c.getClient().getName().toLowerCase().contains(text) || c.getClient().getSurname().toLowerCase().contains(text))
-            {
-                bookings.add(c);
-
-            }
-
-
-        }
+    public ArrayList<Booking> getBookings() {
         return bookings;
+    }
+
+    public void setBookings(ArrayList<Booking> bookings) {
+        this.bookings = bookings;
     }
 }

@@ -1,5 +1,7 @@
 package classes;
 
+import javax.swing.table.DefaultTableModel;
+
 public class Client
 {
     private String DNI;
@@ -41,6 +43,34 @@ public class Client
     public String toString()
     {
         return this.getName().toUpperCase().charAt(0) + "." + this.getSurname() + " - " + this.getDNI();
+    }
+
+    public static Client checkIfClientExists(Hotel hotel, String id)
+    {
+        for(Client c : hotel.getClientList())
+        {
+            if(c.getDNI().equalsIgnoreCase(id))
+            {
+
+                return c;
+            }
+        }
+
+        return null;
+    }
+
+    public static Client returnClientFromRow(int row, DefaultTableModel def, Hotel hotel)
+    {
+        for(Client c : hotel.getClientList()){
+
+            if(c.getDNI().equalsIgnoreCase((String) def.getValueAt(row, 0))){
+
+                System.out.println("Exists ofc");
+                return c;
+            }
+        }
+
+        return null;
     }
 
 

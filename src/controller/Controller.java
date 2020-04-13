@@ -23,268 +23,266 @@ import java.util.Date;
 public class Controller
 {
 
+   public static Hotel hotel;
+   public FileClass f = new FileClass();
 
-    public static ArrayList<Booking> checkSavedCoincidences = new ArrayList<>();
-    public static ArrayList<Booking> checkSavedCoincidencesBooking = new ArrayList<>();
-    public static void addData()
+
+    public void createHotel(String hotelname)
     {
-        int numb = Integer.parseInt(Layout.jpersonnumb.getText());
-        int nights = Integer.parseInt(Layout.jnightnumb.getText());
-        Client client = new Client(Layout.jdni.getText().toString(), Layout.jname.getText().toString() ,Layout.jsurname.getText().toString());
-        LocalDate gotIn = Controller.returnLDfromJcal(Layout.bookdate);
-        LocalDate end = gotIn.plusDays(nights);
-        System.out.println(end);
-        Booking booking = new Booking(gotIn, numb, nights, client);
-        booking.setEnd(end);
-        for (Room r : Layout.currentHotel.getRoomList())
-        {
-
-            if (r.getCapacity() == numb && !isRoomBooked(r.getRoomnumb(), gotIn) || r.getCapacity()+1 == numb && !isRoomBooked(r.getRoomnumb(), gotIn)) {
-                booking.setRoom(r);
-                Layout.bookings.add(booking);
-                Layout.currentHotel.setPendentList(Layout.bookings);
-                System.out.println(Layout.currentHotel.getPendentList().isEmpty());
-                Layout.deftable.addRow(new Object[]{client.getDNI().toUpperCase(), gotIn.getDayOfMonth() + "/" + gotIn.getMonthValue() + "/" + gotIn.getYear(), booking.getPersonNumb(), r.getRoomnumb()});
-                Client c = Controller.checkIfClientNotNeW(Layout.clients, Layout.jdni);
-                if (c == null) Layout.clients.add(client);
-                Controller.clearText();
-                Controller.clearIcons();
-
-            }
-
-            else Layout.jop.showMessageDialog(null,"The room is occupied", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-
+        hotel = new Hotel(hotelname);
+        f.fillRoomList(hotel);
+        f.fillClientList(hotel);
+        f.fillConfirmedListArray(hotel, Layout.deftable2);
+        f.fillPendentListArray(hotel, Layout.deftable);
 
     }
 
-    public static Client checkIfClientNotNeW(ArrayList<Client> clients, JTextField jdni)
+
+
+    public void addHotelRoom(int roomNumber, int personNumber)
     {
-        for(Client c : clients)
+
+        Room r = Room.roomExists(hotel, roomNumber);
+        if(r == null)
         {
-            if(c.getDNI().equals(jdni.getText().toString()))
+            Room room = new Room(roomNumber, personNumber);
+            hotel.getRoomList().add(room);
+            f.addDataToRoomFile(room);
+            JOptionPane.showMessageDialog(null, "Room added successfully!");
+
+
+        }
+
+        else
             {
-                return c;
+                int option = JOptionPane.showConfirmDialog(null, "The room already exists, would you like to increase the guest capacity from "+ r.getCapacity()+ " to "+(r.getCapacity()+personNumber)+"?");
+                switch (option){
+                    case 0:
+                        r.setCapacity((r.getCapacity()+personNumber));
+                        f.readAndReplaceRooms(r);
+                        JOptionPane.showMessageDialog(null, "Room has been updated!");
+
+                        break;
+                    case 1:
+                    case 2:
+                        break;
+
+
+                }
+
+
+
+
+
             }
-        }
 
-        return null;
-    }
-
-    public static void clearText()
-    {
-        Layout.jdni.setText(null);
-        Layout.jname.setText(null);
-        Layout.jsurname.setText(null);
-        Layout.jpersonnumb.setText(null);
-        Layout.jnightnumb.setText(null);
 
     }
 
-    public static void clearIcons()
-    {
-        Layout.dniIC.setIcon(null);
-        Layout.nameIC.setIcon(null);
-        Layout.surnameIC.setIcon(null);
-        Layout.nightsIC.setIcon(null);
-        Layout.guestsIC.setIcon(null);
-
-    }
-
-    private static LocalDate returnLDfromJcal(Component c)
+    public LocalDate returnLDfromJcal(Component c)
     {
         JCalendar jc = ((JCalendar) c);
         long ms = jc.getDate().getTime();
         return Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
-    public static Room registerRoom(int roomNum, int numbPersons, ArrayList<Room> rooms)
+    public boolean addBooking(LocalDate in, LocalDate out, int numb, String id, int nights, String name, String surname, DefaultTableModel deftable)
     {
-        if(rooms.size() == 0)
+        Client client = new Client(id, name, surname);
+        Booking b = new Booking(in, numb, client);
+        b.setEnd(out);
+
+        for(Room r : hotel.getRoomList())
         {
-            return null;
-        }
-        else
-        {
-            for (Room r : rooms)
+
+            if(r.getCapacity() == numb && !Booking.isRoomBooked(r.getRoomnumb(), in, hotel) || r.getCapacity()+1 == numb && !Booking.isRoomBooked(r.getRoomnumb(), in, hotel))
             {
 
-                if (r.getRoomnumb() == roomNum)
+                b.setConfirmed(false);
+                b.setRoom(r);
+                hotel.getBookings().add(b);
+                f.addPendentListToFile(b);
+                deftable.addRow(new Object[]{client.getDNI().toUpperCase(), in.getDayOfMonth()+"/"+in.getMonthValue()+"/"+in.getYear(), b.getPersonNumb(), r.getRoomnumb()});
+                Client c = Client.checkIfClientExists(hotel, id);
+                if(c == null)
                 {
-                    return r;
+                    hotel.getClientList().add(client);
+                    f.addClientToFile(client);
                 }
-            }
-            return null;
-
-        }
-
-
-
-    }
-
-    public static Hotel checkIfHotelExists(JTextField jhotel, ArrayList<Hotel> hotels)
-    {
-        for(Hotel h : hotels)
-        {
-            if(h.getHotelName().equalsIgnoreCase(jhotel.getText()))
-            {
-                return h;
+                JOptionPane.showMessageDialog(null, "Room booked!");
+                return  true;
             }
         }
 
-        return null;
-    }
-
-    public static boolean isRoomBooked(int roomNumb, LocalDate in)
-    {
-
-        for(Booking b : Layout.currentHotel.getPendentList())
-        {
 
 
-            if(b.getRoom().getRoomnumb() == roomNumb && in.isBefore(b.getEnd())) return true;
-
-        }
-
+        JOptionPane.showMessageDialog(null, "There's no available rooms", "ERROR", JOptionPane.ERROR_MESSAGE);
         return false;
+
+
     }
 
-    public static void addConfirmation(MouseEvent e, Hotel currentHotel)
+    public void clearText(JTextField jdni, JTextField jname, JTextField surname, JTextField jpersonnumb, JTextField jnightnumb)
     {
-        int row = Layout.management1.rowAtPoint(e.getPoint());
-        Booking propbooking = returnCliBooking((String) Layout.management1.getValueAt(row, 0));
-        Layout.deftable2.addRow(new Object[]{Layout.management1.getValueAt(row, 0), propbooking.getClient().getName(), propbooking.getClient().getSurname(), Layout.management1.getValueAt(row, 3)});
-        String id = (String) Layout.deftable.getValueAt(row, 0);
-        String lili =  (String) Layout.deftable.getValueAt(row, 1);
-        String[] ldStr = lili.split("/");
-        LocalDate fild = returnLD(ldStr);
-        Layout.deftable.removeRow(row);
+        jdni.setText(null);
+        jname.setText(null);
+        surname.setText(null);
+        jpersonnumb.setText(null);
+        jnightnumb.setText(null);
+    }
 
-        System.out.println(fild);
+    public void clearIcons(JLabel dniIc, JLabel nameIc, JLabel surnameIc, JLabel personIc, JLabel nightIC)
+    {
+        dniIc.setIcon(null);
+        nameIc.setIcon(null);
+        surnameIc.setIcon(null);
+        personIc.setIcon(null);
+        nightIC.setIcon(null);
+    }
 
-        for(Booking b : currentHotel.getPendentList())
-        {
-
-            if(b.getClient().getDNI().equalsIgnoreCase(id) && b.getStart().isEqual(fild))
-            {
-                System.out.println("YESS");
-                Layout.confirmedBookings.add(b);
-                break;
-            }
+    public void confirmBookings(int row, DefaultTableModel def, Hotel hotel, DefaultTableModel def2, JTable management2)
+    {
+        Client client = Client.returnClientFromRow(row, def, hotel);
+        String[] strDate = ((String) def.getValueAt(row, 1)).split("/");
+        LocalDate ld = objectToLD(strDate);
+        System.out.println(client.getDNI() + " "+ client.getName()+" "+ client.getSurname());
+        Booking booking = Booking.returnConfirmationBooking((String) def.getValueAt(row, 0), hotel, ld);
+        if (booking != null && client != null) {
+            booking.setConfirmed(true);
+            def2.addRow(new Object[]{client.getDNI().toUpperCase(), client.getName().toUpperCase(), client.getSurname().toUpperCase(), def.getValueAt(row, 3), def.getValueAt(row, 1)});
+            management2.getColumnModel().getColumn(4).setMinWidth(0);
+            management2.getColumnModel().getColumn(4).setMaxWidth(0);
+            management2.getColumnModel().getColumn(4).setWidth(0);
+            def.removeRow(row);
+            f.addConfirmedListToFile(booking);
+            f.deletePendent(booking);
         }
 
 
+
     }
 
-    public static LocalDate returnLD(String[] ld)
+    public LocalDate objectToLD(String[] str)
     {
-        int numb[] = new int[ld.length];
-        for(int x = 0; x < ld.length;x++)
-        {
-            numb[x] = Integer.parseInt(ld[x]);
+        int numb[] = new int[str.length];
+
+        for(int x = 0; x < str.length;x++){
+
+            numb[x] = Integer.parseInt(str[x]);
         }
 
-        LocalDate ldd = LocalDate.of(numb[2], numb[1], numb[0]);
-        System.out.println(ldd);
-        return ldd;
+        return  LocalDate.of(numb[2], numb[1], numb[0]);
+
     }
 
-    public static void listBookingsIn(JDateChooser jdc)
+    public void clearTable(DefaultTableModel def)
     {
-        LocalDate ld = getLDfromJChooser(jdc);
-        for(Booking b : Layout.confirmedBookings)
-        {
-            System.out.println(b.getEnd());
-            if(b.getStart().isEqual(ld))
-            {
-                Layout.deftable2.addRow(new Object[]{b.getClient().getDNI().toUpperCase(),  b.getClient().getName(), b.getClient().getSurname(), b.getRoom().getRoomnumb()});
-            }
-        }
+        while(def.getRowCount()!=0) def.removeRow(0);
     }
 
-    public static void listBookingsOut(JDateChooser jdc)
-    {
-        LocalDate ld = getLDfromJChooser(jdc);
-
-
-        System.out.println(Layout.confirmedBookings.isEmpty());
-        for(Booking b : Layout.confirmedBookings)
-        {
-            System.out.println(b.getEnd());
-            if(b.getEnd().isEqual(ld))
-            {
-                Layout.deftable2.addRow(new Object[]{b.getClient().getDNI().toUpperCase(),  b.getClient().getName(), b.getClient().getSurname(), b.getRoom().getRoomnumb()});
-            }
-        }
-    }
-
-    public static LocalDate getLDfromJChooser(JDateChooser jdc)
+    public LocalDate returnLDFromDateChooser(JDateChooser jdc)
     {
         Date date = jdc.getDate();
         return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
-    public static Booking returnCliBooking(String id)
+    public void printDependingOnButton(JDateChooser jdc, JToggleButton jtb, DefaultTableModel def2, boolean toggled)
     {
-        for(Booking  b : Layout.bookings)
+        LocalDate ld = returnLDFromDateChooser(jdc);
+        Booking.listBookings(ld, hotel, toggled, def2);
+    }
+
+    public void addClientToJlist(JTextField searchBar, DefaultListModel defcli)
+    {
+        ArrayList<Client> saveCoincidences = new ArrayList<>();
+        for(Client c: hotel.getClientList())
         {
-
-            if(b.getClient().getDNI().equalsIgnoreCase(id))
+            if(c.getName().toLowerCase().contains(searchBar.getText()) && !checkIfExistentInCoincidences(saveCoincidences, c) || c.getSurname().toLowerCase().contains(searchBar.getText()) && !checkIfExistentInCoincidences(saveCoincidences, c) || c.getDNI().toLowerCase().contains(searchBar.getText()) && !checkIfExistentInCoincidences(saveCoincidences, c))
             {
-                return b;
+                saveCoincidences.add(c);
             }
+
         }
+        addCoincidencesToJlist(saveCoincidences, defcli);
+        saveCoincidences.clear();
 
-        return null;
     }
 
-    public static void clearTable(DefaultTableModel deftable2)
+    public void addCoincidencesToJlist(ArrayList<Client> coincidences, DefaultListModel defcli)
     {
-       while(deftable2.getRowCount()> 0) deftable2.removeRow(0);
-    }
-
-    public static void addCoincidences(ArrayList<Booking> savedCoincidences)
-    {
-        for(Booking b : savedCoincidences)
+        for(Client c: coincidences)
         {
-            if(!checkNotRepeated(savedCoincidences, checkSavedCoincidences))
-            {
-                Client c = b.getClient();
-                Layout.defclilist.addElement(c);
-                checkSavedCoincidences.add(b);
-            }
+            defcli.addElement(c);
         }
     }
 
-    public static boolean checkNotRepeated(ArrayList<Booking> savedCoincidences, ArrayList<Booking> repeated)
+    public static boolean checkIfExistentInCoincidences(ArrayList<Client> coincidences, Client c)
     {
-        for(Booking b : savedCoincidences){
+       for(Client cli : coincidences)
+       {
+           if(cli.getDNI().equalsIgnoreCase(c.getDNI())) return true;
+       }
 
-            for(Booking rep : repeated)  {
-
-                if(b == rep)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+       return false;
     }
 
-    public static void addCoincidencesBooking(ArrayList<Booking> savedCoincidences, Client cli)
+    public void addBookingsToJlist(DefaultListModel defbooking, Client c)
     {
-
-        for(Booking b : savedCoincidences)
+        for(Booking b : hotel.getBookings())
         {
-            if(b.getClient().getDNI().equalsIgnoreCase(cli.getDNI()))
-            {
-
-                System.out.println("inn");
-                Layout.defbookinglist.addElement(b);
-
-
-            }
+            if(b.getClient().getDNI().equalsIgnoreCase(c.getDNI())) defbooking.addElement(b);
         }
+    }
+
+    public void deleteBooking(Booking b, DefaultTableModel def1, DefaultTableModel def2)
+    {
+
+
+        if(!b.isConfirmed())
+        {
+            System.out.println(b.isConfirmed());
+            int x = returnRowToDeleteDef1(def1, b);
+            Booking.deleteBooking(b, hotel);
+            f.deletePendent(b);
+            def1.removeRow(x);
+        }
+        else {
+
+            System.out.println(b.isConfirmed());
+            int x = returnRowToDeleteDef2(def2, b);
+            Booking.deleteBooking(b, hotel);
+            f.deleteConfirmed(b);
+            def2.removeRow(x);
+        }
+
+
+    }
+
+    public int returnRowToDeleteDef1(DefaultTableModel def, Booking b)
+    {
+
+
+
+        for(int x = 0; x < def.getRowCount();x++)
+        {
+            String[] str = def.getValueAt(x,1).toString().split("/");
+            LocalDate ld = objectToLD(str);
+
+            if(def.getValueAt(x, 0).equals(b.getClient().getDNI().toUpperCase()) && !b.isConfirmed() && ld.isEqual(b.getStart())) return x;
+        }
+        return -1;
+    }
+
+    public  int returnRowToDeleteDef2(DefaultTableModel def, Booking b)
+    {
+        for(int x = 0; x < def.getRowCount();x++)
+        {
+            String[] str = def.getValueAt(x,4).toString().split("/");
+            LocalDate ld = objectToLD(str);
+            if(def.getValueAt(x, 0).equals(b.getClient().getDNI().toUpperCase()) && b.isConfirmed() && ld.isEqual(b.getStart())) return x;
+        }
+
+        return -1;
     }
 
 
@@ -294,3 +292,5 @@ public class Controller
 
 
 }
+
+
